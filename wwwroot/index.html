@@ -4,7 +4,28 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>GenerateJsonFromXlsx</title>
+    <!-- HTML Meta Tags -->
+    <title>ExcelJson変換君</title>
+    <meta name="description" content="Excelファイル(.xlsx)を簡単にJsonファイルに変換するサイト">
+
+    <!-- Google / Search Engine Tags -->
+    <meta itemprop="name" content="ExcelJson変換君">
+    <meta itemprop="description" content="Excelファイル(.xlsx)を簡単にJsonファイルに変換するサイト">
+    <meta itemprop="image" content="ExcelJsonOGP.png">
+
+    <!-- Facebook Meta Tags -->
+    <meta property="og:url" content="https://xlsxjson.mogami.dev">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="ExcelJson変換君">
+    <meta property="og:description" content="Excelファイル(.xlsx)を簡単にJsonファイルに変換するサイト">
+    <meta property="og:image" content="ExcelJsonOGP.png">
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ExcelJson変換君">
+    <meta name="twitter:description" content="Excelファイル(.xlsx)を簡単にJsonファイルに変換するサイト">
+    <meta name="twitter:image" content="ExcelJsonOGP.png">
+
     <base href="/" />
     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
@@ -24,6 +45,15 @@
         window.copyToCB = (value) => {
             window.navigator.clipboard.writeText(value);
         }
+    </script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-M6QVBBXRZ0"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-M6QVBBXRZ0');
     </script>
 </body>
 
