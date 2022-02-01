@@ -20,6 +20,11 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        window.copyToCB = (value) => {
+            window.navigator.clipboard.writeText(value);
+        }
+    </script>
 </body>
 
 </html>
