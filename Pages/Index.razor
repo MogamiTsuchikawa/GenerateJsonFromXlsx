@@ -1,0 +1,115 @@
+﻿@page "/"
+@using ClosedXML.Excel
+
+<PageTitle>ExcelJson変換君</PageTitle>
+<h2>Excel(.xlsx) => JSON</h2>
+
+<h3>Step.1 Excelファイルを選択</h3>
+<p>当システムは全て利用者のブラウザ上のみで完結しているためExcelファイルをサーバーに送信等は行っていません。</p>
+<InputFile OnChange="LoadFile" />
+@if (fileOpenStatus != null)
+{
+    <p>@fileOpenStatus</p>
+}
+@if (step > 0)
+{
+    <h3>Step.2 変換するシートの選択</h3>
+    <select @bind="@selectedSheetName">
+    @foreach (var sheet in worksheets)
+        {
+            <option value="@sheet.Name">@sheet.Name</option>
+        }
+    </select>
+    <p>@selectedSheetName シートをJSONで変換します</p>
+    <button @onclick="@GoToStep3">次のStepへ（型の確認）</button>
+    if (step > 1)
+    {
+        <h3>Step.3 型の確認</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">列名</th>
+                    <th scope="col">型</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in typeList)
+                {
+                    <tr>
+                        <th>@row.name</th>
+                        <th>
+                            <select @bind="@row.typeStr">
+                                @foreach (var type in Enum.GetNames(typeof(Type)))
+                                {
+                                    <option value=@type>@type</option>
+                                }
+                            </select>
+                        </th>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+
+
+@code {
+    XLWorkbook targetBook;
+    List<IXLWorksheet> worksheets = new();
+    string? selectedSheetName { get; set; }
+    int step = 0;
+    string? fileOpenStatus;
+    List<RowType> typeList = new();
+
+
+    async Task LoadFile(InputFileChangeEventArgs e)
+    {
+        fileOpenStatus = "Now Loading";
+        var file = e.GetMultipleFiles(1);
+        byte[] buffer = new byte[file[0].Size];
+        await file[0].OpenReadStream().ReadAsync(buffer);
+        MemoryStream stream = new MemoryStream(buffer);
+        try
+        {
+            var book = new XLWorkbook(stream);
+            targetBook = book;
+            step = 1;
+            StateHasChanged();
+        }
+        catch (Exception exception)
+        {
+            fileOpenStatus = "ファイルオープンに失敗しました。";
+        }
+
+        foreach (var sheet in targetBook.Worksheets)
+        {
+            worksheets.Add(sheet);
+            Console.WriteLine(sheet.Name);
+        }
+        StateHasChanged();
+    }
+    void GoToStep3()
+    {
+        typeList.Add(new(){name="NAME", type=Type.文字型});
+        step = 2;
+        StateHasChanged();
+    }
+    public enum Type{
+        文字型,
+        数値型,
+        真偽値
+    }
+    class RowType
+    {
+        public string name { get; set; }
+        public Type type 
+        { 
+            get => Enum.Parse<Type>(typeStr);
+            set {
+                typeStr = value.ToString();
+            }
+        }
+        public string typeStr { get; set; }
+    }
+}
