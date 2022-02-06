@@ -16,7 +16,7 @@
 {
     <h3>Step.2 変換するシートの選択</h3>
     <select @bind="@selectedSheetName">
-    @foreach (var sheet in worksheets)
+        @foreach (var sheet in worksheets)
         {
             <option value="@sheet.Name">@sheet.Name</option>
         }
@@ -50,20 +50,21 @@
                 }
             </tbody>
         </table>
-        <button @onclick="GenerateJson">JSON生成</button>
-        @if(step > 2)
+        <button @onclick="OnClickGenerateJson">JSON生成</button>
+        <button @onclick="OnClickGenerateJSObjectCode">JavaScriptObjectCode生成</button>
+        @if (step > 2)
         {
             <p>@generateJosnMsg</p>
         }
-        @if(step > 3)
+        @if (step > 3)
         {
             <h3>JSON</h3>
             <button @onclick="CopyJsonToClipboard">生成結果をｸﾘｯﾌﾟﾎﾞｰﾄﾞへｺﾋﾟｰ</button>
             <pre>
-                <code>
+            <code>
                     @generatedJson
-                </code>
-            </pre>
+                            </code>
+                        </pre>
         }
     }
 }
@@ -118,7 +119,7 @@
         if (targetWorkSheet == null) return;
         int col = 1;
 
-        while(true)
+        while (true)
         {
             IXLCell topCell = targetWorkSheet.Cell(1, col);
             IXLCell valueCell = targetWorkSheet.Cell(2, col);
@@ -157,7 +158,17 @@
                 return $"\"{cell.GetString()}\"";
         }
     }
-    async void GenerateJson()
+    void OnClickGenerateJSObjectCode()
+    {
+        GenerateJson(true);
+    }
+    void OnClickGenerateJson()
+    {
+        GenerateJson(false);
+    }
+    string GetJsonNameStr(string name, bool jsObjMode)
+        => jsObjMode ? name : $"\"{name}\"";
+    async void GenerateJson(bool jsObjMode)
     {
         step = 3;
         generateJosnMsg = $"JSONを生成中";
@@ -166,14 +177,14 @@
         await Task.Run(() =>
         {
             string json = "[\n";
-            for(int r = 2; true; r++)
+            for (int r = 2; true; r++)
             {
                 generateJosnMsg = $"{r}行目を処理中";
                 StateHasChanged();
                 json += "    {\n";
-                for(int c = 1; c <= typeList.Count(); c++)
+                for (int c = 1; c <= typeList.Count(); c++)
                 {
-                    json += $"        \"{typeList[c - 1].name}\":{FormatCell(targetWorkSheet.Cell(r, c), typeList[c - 1])}";
+                    json += $"        {typeList[c - 1].name}:{FormatCell(targetWorkSheet.Cell(r, c), typeList[c - 1])}";
                     json += c == typeList.Count() ? "\n" : ",\n";
                 }
                 if (targetWorkSheet.Cell(r + 1, 1).IsEmpty())
@@ -198,7 +209,8 @@
     {
         await JS.InvokeVoidAsync("copyToCB", generatedJson);
     }
-    public enum Type{
+    public enum Type
+    {
         文字型,
         数値型,
         真偽値
@@ -206,10 +218,11 @@
     class RowType
     {
         public string name { get; set; }
-        public Type type 
-        { 
+        public Type type
+        {
             get => Enum.Parse<Type>(typeStr);
-            set {
+            set
+            {
                 typeStr = value.ToString();
             }
         }
