@@ -74,7 +74,22 @@
             </div>
             @if (step > 2)
             {
-                <p>@generateJosnMsg</p>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="progress mt-1">
+                            <div class="progress-bar progress-bar-striped bg-success"
+                         style=@progressbarStyle
+                         role="progressbar"
+                         aria-valuenow=@generateJsonState
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                                @generateJsonState %
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="mt-1">@generateJosnMsg</p>
             }
         </div>
     }
@@ -85,7 +100,7 @@
             <div class="overflow-auto" style="width:100%; height:300px;">
                 <pre><code>
                         @generatedJson
-                </code></pre>
+                                </code></pre>
             </div>
         </div>
     }
@@ -103,6 +118,8 @@
     string generatedJson = "";
     string generateJosnMsg = "";
     bool isFileLoding = false;
+    int generateJsonState = 0;
+    string progressbarStyle = "width:0%;";
 
 
     async Task LoadFile(InputFileChangeEventArgs e)
@@ -183,47 +200,49 @@
     }
     void OnClickGenerateJSObjectCode()
     {
+        step = 3;
+        generateJosnMsg = $"JSONを生成中";
+        StateHasChanged();
         GenerateJson(true);
     }
     void OnClickGenerateJson()
     {
+        step = 3;
+        generateJosnMsg = $"JSONを生成中";
+        StateHasChanged();
         GenerateJson(false);
     }
     string GetJsonNameStr(string name, bool jsObjMode)
         => jsObjMode ? name : $"\"{name}\"";
     async void GenerateJson(bool jsObjMode)
     {
-        step = 3;
-        generateJosnMsg = $"JSONを生成中";
-        StateHasChanged();
-
-        await Task.Run(() =>
+        int maxRow = targetWorkSheet.LastRowUsed().RowNumber();
+        string json = "[\n";
+        for (int r = 2; true; r++)
         {
-            string json = "[\n";
-            for (int r = 2; true; r++)
+            generateJosnMsg = $"{r}行目を処理中";
+            generateJsonState = (int)((double)r / maxRow * 100);
+            progressbarStyle = $"width:{generateJsonState}%;";
+            StateHasChanged();
+            json += "    {\n";
+            for (int c = 1; c <= typeList.Count(); c++)
             {
-                generateJosnMsg = $"{r}行目を処理中";
-                StateHasChanged();
-                json += "    {\n";
-                for (int c = 1; c <= typeList.Count(); c++)
-                {
-                    json += $"        {typeList[c - 1].name}:{FormatCell(targetWorkSheet.Cell(r, c), typeList[c - 1])}";
-                    json += c == typeList.Count() ? "\n" : ",\n";
-                }
-                if (targetWorkSheet.Cell(r + 1, 1).IsEmpty())
-                {
-                    json += "    }\n";
-                    break;
-                }
-                else
-                {
-                    json += "    },\n";
-                }
+                json += $"        {typeList[c - 1].name}:{FormatCell(targetWorkSheet.Cell(r, c), typeList[c - 1])}";
+                json += c == typeList.Count() ? "\n" : ",\n";
             }
-            json += "]\n";
-            generatedJson = json;
-        });
-
+            if (targetWorkSheet.Cell(r + 1, 1).IsEmpty())
+            {
+                json += "    }\n";
+                break;
+            }
+            else
+            {
+                json += "    },\n";
+            }
+            await Task.Delay(1);
+        }
+        json += "]\n";
+        generatedJson = json;
         generateJosnMsg = "生成完了";
         step = 4;
         StateHasChanged();
