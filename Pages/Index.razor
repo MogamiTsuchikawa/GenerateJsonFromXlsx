@@ -3,72 +3,93 @@
 @inject IJSRuntime JS
 
 <PageTitle>ExcelJson変換君</PageTitle>
-<h2>Excel(.xlsx) => JSON</h2>
-
-<h3>Step.1 Excelファイルを選択</h3>
-<p>当システムは全て利用者のブラウザ上のみで完結しているためExcelファイルをサーバーに送信等は行っていません。</p>
-<InputFile OnChange="LoadFile" />
-@if (fileOpenStatus != null)
-{
-    <p>@fileOpenStatus</p>
-}
-@if (step > 0)
-{
-    <h3>Step.2 変換するシートの選択</h3>
-    <select @bind="@selectedSheetName">
-        @foreach (var sheet in worksheets)
+<div class="container">
+    <div class="row">
+        <h2>Excel(.xlsx) => JSON</h2>
+    </div>
+    <div class="row mt-2">
+        <h3>Step.1 Excelファイルを選択</h3>
+        <p>当システムは全て利用者のブラウザ上のみで完結しているためExcelファイルをサーバーに送信等は行っていません。</p>
+        <InputFile OnChange="LoadFile" />
+        @if (isFileLoding)
         {
-            <option value="@sheet.Name">@sheet.Name</option>
+            <div class="row">
+                <div class="spinner-border text-success" style="margin: 1em;" role="status">
+                </div>
+            </div>
         }
-    </select>
-    <p>@selectedSheetName シートをJSONで変換します</p>
-    <button @onclick="@GoToStep3">次のStepへ（型の確認）</button>
+    </div>
+    @if (step > 0)
+    {
+        <div class="row mt-2">
+            <h3>Step.2 変換するシートの選択</h3>
+            <div class="form-group row">
+                <label for="select1a" class="col-auto-label col-sm-2">シート名</label>
+                <select id="select1a" class="form-control col-auto col-sm-10" @bind="@selectedSheetName">
+                    @foreach (var sheet in worksheets)
+                    {
+                        <option value="@sheet.Name">@sheet.Name</option>
+                    }
+                </select>
+            </div>
+            <p>@selectedSheetName シートをJSONで変換します</p>
+            <div class="row">
+                <button class="btn btn-success col-auto" @onclick="@GoToStep3">次のStepへ（型の確認）</button>
+            </div>
+        </div>
+    }
     @if (step > 1)
     {
-        <h3>Step.3 型の確認</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th scope="col">列名</th>
-                    <th scope="col">型</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var row in typeList)
-                {
+        <div class="row mt-2">
+            <h3>Step.3 型の確認</h3>
+            <table class="table table-striped">
+                <thead>
                     <tr>
-                        <th>@row.name</th>
-                        <th>
-                            <select @bind="@row.typeStr">
-                                @foreach (var type in Enum.GetNames(typeof(Type)))
-                                {
-                                    <option value=@type>@type</option>
-                                }
-                            </select>
-                        </th>
+                        <th scope="col">列名</th>
+                        <th scope="col">型</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-        <button @onclick="OnClickGenerateJson">JSON生成</button>
-        <button @onclick="OnClickGenerateJSObjectCode">JavaScriptObjectCode生成</button>
-        @if (step > 2)
-        {
-            <p>@generateJosnMsg</p>
-        }
-        @if (step > 3)
-        {
-            <h3>JSON</h3>
-            <button @onclick="CopyJsonToClipboard">生成結果をｸﾘｯﾌﾟﾎﾞｰﾄﾞへｺﾋﾟｰ</button>
-            <pre>
-            <code>
-                    @generatedJson
-                            </code>
-                        </pre>
-        }
+                </thead>
+                <tbody>
+                    @foreach (var row in typeList)
+                    {
+                        <tr>
+                            <th>@row.name</th>
+                            <th>
+                                <select @bind="@row.typeStr">
+                                    @foreach (var type in Enum.GetNames(typeof(Type)))
+                                    {
+                                        <option value=@type>@type</option>
+                                    }
+                                </select>
+                            </th>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="row mt-1">
+                <button class="btn btn-success col-auto" @onclick="OnClickGenerateJson">JSON生成</button>
+            </div>
+            <div class="row mt-1">
+                <button class="btn btn-success col-auto" @onclick="OnClickGenerateJSObjectCode">JavaScriptObjectCode生成</button>
+            </div>
+            @if (step > 2)
+            {
+                <p>@generateJosnMsg</p>
+            }
+        </div>
     }
-}
-
+    @if (step > 3)
+    {
+        <div class="row mt-2">
+            <button class="btn btn-success col-auto" @onclick="CopyJsonToClipboard">生成結果をｸﾘｯﾌﾟﾎﾞｰﾄﾞへｺﾋﾟｰ</button>
+            <div class="overflow-auto" style="width:100%; height:300px;">
+                <pre><code>
+                        @generatedJson
+                </code></pre>
+            </div>
+        </div>
+    }
+</div>
 
 
 @code {
@@ -81,11 +102,12 @@
     List<RowType> typeList = new();
     string generatedJson = "";
     string generateJosnMsg = "";
+    bool isFileLoding = false;
 
 
     async Task LoadFile(InputFileChangeEventArgs e)
     {
-        fileOpenStatus = "Now Loading";
+        isFileLoding = true;
         var file = e.GetMultipleFiles(1);
         byte[] buffer = new byte[file[0].Size];
         await file[0].OpenReadStream().ReadAsync(buffer);
@@ -108,6 +130,7 @@
             Console.WriteLine(sheet.Name);
         }
         selectedSheetName = worksheets[0].Name;
+        isFileLoding = false;
         StateHasChanged();
     }
     void GoToStep3()
